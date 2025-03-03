@@ -1,0 +1,12 @@
+{
+  "name": "llrt-serverless-example",
+  "version": "1.0.0",
+  "description": "LLRT with Serverless Framework",
+  "main": "index.js",
+  "scripts": {
+    "setup": "node scripts/setup.js"
+  },
+  "devDependencies": {
+    "serverless": "^3.37.0"
+  }
+}

@@ -1,0 +1,45 @@
+service: my-llrt-service
+
+provider:
+  name: aws
+  region: us-west-1
+  runtime: provided.al2
+  architecture: arm64
+
+plugins:
+  - ./plugins/verify-bootstrap
+
+package:
+  individually: true
+  patterns:
+    - "!node_modules/**"
+    - "!.serverless/**"
+    - "!yarn.lock"
+    - "!package-lock.json"
+
+functions:
+  hello:
+    handler: src/hello.handler
+    runtime: provided.al2
+    architecture: arm64
+    package:
+      patterns:
+        - src/hello.js
+        - bootstrap
+    events:
+      - httpApi:
+          path: /hello
+          method: get
+          
+  goodbye:
+    handler: src/goodbye.handler
+    runtime: provided.al2
+    architecture: arm64
+    package:
+      patterns:
+        - src/goodbye.js
+        - bootstrap
+    events:
+      - httpApi:
+          path: /goodbye
+          method: get
