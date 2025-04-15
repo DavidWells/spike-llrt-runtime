@@ -102,3 +102,81 @@ npm run remove
 
 - You can deploy LLRT in many ways, see https://github.com/awslabs/llrt?tab=readme-ov-file#configure-lambda-functions-to-use-llrt
 - See [Serverless Framework docs](https://www.serverless.com/framework/docs) for more information on how to deploy and manage your service.
+
+## Performance results
+
+You can perf test with `node perf-test.js`
+
+Average response time: 54.05ms. Not too shabby.
+
+```bash
+───────────────────────────────
+Starting performance tests...
+Configuration:
+- Concurrent requests: 10
+- Total requests per endpoint: 100
+- Warmup requests: 5
+
+Running performance test for hello endpoint...
+Warming up...
+Running 100 requests with 10 concurrent requests...
+..........
+
+Results for hello:
+Total requests: 100
+Min response time: 34.72ms
+Max response time: 290.14ms
+Average response time: 73.94ms
+95th percentile: 210.99ms
+99th percentile: 290.14ms
+
+Running performance test for goodbye endpoint...
+Warming up...
+Running 100 requests with 10 concurrent requests...
+..........
+
+Results for goodbye:
+Total requests: 100
+Min response time: 29.46ms
+Max response time: 156.11ms
+Average response time: 54.05ms
+95th percentile: 116.24ms
+99th percentile: 156.11ms
+```
+
+Second run. Average response time: 54.05ms
+
+```bash
+───────────────────────────────
+Starting performance tests...
+Configuration:
+- Concurrent requests: 10
+- Total requests per endpoint: 100
+- Warmup requests: 5
+
+Running performance test for hello endpoint...
+Warming up...
+Running 100 requests with 10 concurrent requests...
+..........
+
+Results for hello:
+Total requests: 100
+Min response time: 32.55ms
+Max response time: 278.29ms
+Average response time: 70.03ms
+95th percentile: 151.55ms
+99th percentile: 278.29ms
+
+Running performance test for goodbye endpoint...
+Warming up...
+Running 100 requests with 10 concurrent requests...
+..........
+
+Results for goodbye:
+Total requests: 100
+Min response time: 31.30ms
+Max response time: 278.21ms
+Average response time: 44.51ms
+95th percentile: 67.78ms
+99th percentile: 278.21ms
+```
