@@ -11,6 +11,7 @@ The function are behind simple HTTP API Gateway endpoints.
 - ARM64 architecture for better performance/cost ratio
 - Custom Serverless Framework plugin for deployment validation
 - Automated LLRT bootstrap setup
+- **🔧 LLRT Compatibility Checker** - Verify code compatibility before deployment
 
 ## Prerequisites
 
@@ -29,7 +30,14 @@ The function are behind simple HTTP API Gateway endpoints.
    ```bash
    npm run setup
    ```
-4. Deploy to AWS:
+4. Test LLRT compatibility (optional):
+   ```bash
+   npm run check:hello
+   npm run check:goodbye
+   # Or run all tests
+   npm test
+   ```
+5. Deploy to AWS:
    ```bash
    npm run deploy
    ```
@@ -71,15 +79,22 @@ The function are behind simple HTTP API Gateway endpoints.
 ```bash
 .
 ├── bootstrap # LLRT runtime
+├── bin/ # CLI tools
+│   └── llrt-check.js # LLRT compatibility checker
+├── docs/ # Documentation
+│   └── llrt-check.md # Checker documentation
 ├── node_modules # Node.js dependencies
 ├── package.json
 ├── serverless.yml
-├── src # Source code
+├── src/ # Source code
 │   ├── hello.js
-│   └── goodbye.js
-├── scripts # Deployment scripts
+│   ├── goodbye.js
+│   └── test-function.js
+├── scripts/ # Setup and utility scripts
 │   ├── setup.js
-│   └── deploy.js
+│   ├── get-compat.js
+│   └── test-checker.js
+└── llrt-compatibility.json # Compatibility matrix
 ```
 
 ## Deployment
@@ -97,6 +112,29 @@ To delete the service, run:
 ```bash
 npm run remove
 ```
+
+## LLRT Compatibility Checker
+
+This project includes a custom compatibility checker to verify your code will work with LLRT before deployment:
+
+```bash
+# Check specific functions
+npm run check:hello
+npm run check:goodbye
+
+# Check any JavaScript file
+./bin/llrt-check.js path/to/your/function.js
+
+# Run all compatibility tests
+npm test
+```
+
+The checker performs:
+- **Static Analysis**: Scans for unsupported modules and features
+- **Runtime Testing**: Executes code in both Node.js and LLRT environments
+- **Performance Comparison**: Reports execution time differences
+
+See [docs/llrt-check.md](docs/llrt-check.md) for detailed usage instructions.
 
 ## Notes
 
