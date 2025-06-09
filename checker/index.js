@@ -1,20 +1,19 @@
-#!/usr/bin/env node
-
 const fs = require('fs')
 const path = require('path')
-const { execSync, spawn } = require('child_process')
-const os = require('os')
+const { spawn } = require('child_process')
+const { LambdaRuntimeServer } = require('./lambda-runtime-server')
 
 class LLRTChecker {
   constructor() {
     this.llrtBinary = null
     this.compatibilityData = null
+    this.runtimeServer = new LambdaRuntimeServer()
     this.loadCompatibilityData()
   }
 
   loadCompatibilityData() {
     try {
-      const compatPath = path.join(__dirname, '..', 'llrt-compatibility.json')
+      const compatPath = path.join(__dirname, 'llrt-compatibility.json')
       this.compatibilityData = JSON.parse(fs.readFileSync(compatPath, 'utf8'))
     } catch (error) {
       console.warn('⚠️  Could not load compatibility data:', error.message)
@@ -26,43 +25,14 @@ class LLRTChecker {
       return this.llrtBinary
     }
 
-    const platform = os.platform()
-    const arch = os.arch()
-    
-    let binaryName = 'llrt'
-    let downloadUrl = 'https://github.com/awslabs/llrt/releases/latest/download/'
-    
-    if (platform === 'darwin') {
-      downloadUrl += arch === 'arm64' ? 'llrt-container-arm64' : 'llrt-container-x64'
-    } else if (platform === 'linux') {
-      downloadUrl += arch === 'arm64' ? 'llrt-container-arm64' : 'llrt-container-x64'
-    } else if (platform === 'win32') {
-      binaryName = 'llrt.exe'
-      downloadUrl += arch === 'arm64' ? 'llrt-container-arm64.exe' : 'llrt-container-x64.exe'
-    } else {
-      throw new Error(`Unsupported platform: ${platform}`)
+    // Use local LLRT build
+    const llrtPath = path.join(__dirname, '..', 'llrt-upstream', 'target', 'release', 'llrt')
+    if (fs.existsSync(llrtPath)) {
+      this.llrtBinary = llrtPath
+      return llrtPath
     }
 
-    const binDir = path.join(__dirname, '..', '.llrt')
-    const binaryPath = path.join(binDir, binaryName)
-
-    if (!fs.existsSync(binDir)) {
-      fs.mkdirSync(binDir, { recursive: true })
-    }
-
-    if (!fs.existsSync(binaryPath)) {
-      console.log('📥 Downloading LLRT binary...')
-      try {
-        execSync(`curl -L "${downloadUrl}" -o "${binaryPath}"`, { stdio: 'inherit' })
-        execSync(`chmod +x "${binaryPath}"`)
-        console.log('✅ LLRT binary downloaded successfully')
-      } catch (error) {
-        throw new Error(`Failed to download LLRT binary: ${error.message}`)
-      }
-    }
-
-    this.llrtBinary = binaryPath
-    return binaryPath
+    throw new Error('Local LLRT build not found. Please build LLRT first with `cargo build --release`')
   }
 
   analyzeCodeCompatibility(filePath) {
@@ -115,16 +85,78 @@ class LLRTChecker {
   }
 
   async executeWithRuntime(filePath, runtime = 'node') {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const startTime = Date.now()
       let stdout = ''
       let stderr = ''
 
-      const runtimePath = runtime === 'llrt' ? this.llrtBinary : 'node'
-      const child = spawn(runtimePath, [filePath], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, NODE_ENV: 'test' }
-      })
+      // Create a test event that matches API Gateway format
+      const testEvent = {
+        version: '2.0',
+        routeKey: 'GET /hello',
+        rawPath: '/hello',
+        rawQueryString: 'name=Test',
+        queryStringParameters: {
+          name: 'Test'
+        },
+        requestContext: {
+          accountId: '123456789012',
+          apiId: 'api-id',
+          domainName: 'id.execute-api.us-east-1.amazonaws.com',
+          domainPrefix: 'id',
+          http: {
+            method: 'GET',
+            path: '/hello',
+            protocol: 'HTTP/1.1',
+            sourceIp: 'IP',
+            userAgent: 'agent'
+          },
+          requestId: 'id',
+          routeKey: 'GET /hello',
+          stage: '$default',
+          time: '12/Mar/2020:19:03:58 +0000',
+          timeEpoch: 1583348638390
+        },
+        isBase64Encoded: false
+      }
+
+      let child
+      const wrapperPath = path.join(__dirname, 'lambda-wrapper.js')
+      console.log('Wrapper path:', wrapperPath)
+      const handlerArg = path.relative(process.cwd(), filePath)
+      if (runtime === 'llrt') {
+        // Start the Lambda Runtime API server
+        await this.runtimeServer.start()
+        this.runtimeServer.setInvocationData(testEvent)
+
+        // Use local LLRT binary to run the wrapper
+        const llrtBinary = await this.ensureLLRTBinary()
+        console.log('Runtime path:', llrtBinary, wrapperPath, handlerArg)
+        child = spawn(llrtBinary, [wrapperPath, handlerArg], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env: { 
+            ...process.env,
+            NODE_ENV: 'test',
+            AWS_LAMBDA_FUNCTION_NAME: 'test-function',
+            AWS_LAMBDA_FUNCTION_MEMORY_SIZE: '128',
+            AWS_LAMBDA_FUNCTION_VERSION: '$LATEST',
+            AWS_LAMBDA_LOG_GROUP_NAME: '/aws/lambda/test-function',
+            AWS_LAMBDA_LOG_STREAM_NAME: 'test-stream',
+            AWS_LAMBDA_RUNTIME_API: '127.0.0.1:9001'
+          }
+        })
+      } else {
+        // Run with Node.js using the wrapper
+        console.log('Runtime path: node', wrapperPath, handlerArg)
+        child = spawn('node', [wrapperPath, handlerArg], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env: { ...process.env, NODE_ENV: 'test' }
+        })
+
+        // Write the test event to stdin
+        child.stdin.write(JSON.stringify(testEvent))
+        child.stdin.end()
+      }
 
       child.stdout.on('data', (data) => {
         stdout += data.toString()
@@ -134,8 +166,14 @@ class LLRTChecker {
         stderr += data.toString()
       })
 
-      child.on('close', (code) => {
+      child.on('close', async (code) => {
         const executionTime = Date.now() - startTime
+        
+        // Stop the Lambda Runtime API server if it was started
+        if (runtime === 'llrt') {
+          await this.runtimeServer.stop()
+        }
+
         resolve({
           runtime,
           exitCode: code,
@@ -146,7 +184,12 @@ class LLRTChecker {
         })
       })
 
-      child.on('error', (error) => {
+      child.on('error', async (error) => {
+        // Stop the Lambda Runtime API server if it was started
+        if (runtime === 'llrt') {
+          await this.runtimeServer.stop()
+        }
+
         reject({
           runtime,
           error: error.message,
@@ -156,8 +199,12 @@ class LLRTChecker {
       })
 
       // Set timeout for execution
-      setTimeout(() => {
+      setTimeout(async () => {
         child.kill()
+        // Stop the Lambda Runtime API server if it was started
+        if (runtime === 'llrt') {
+          await this.runtimeServer.stop()
+        }
         reject({
           runtime,
           error: 'Execution timeout',
@@ -202,10 +249,11 @@ class LLRTChecker {
       // Execute with Node.js
       console.log('Testing with Node.js...')
       const nodeResult = await this.executeWithRuntime(filePath, 'node')
-      
+      console.log('Node.js result:', nodeResult)
       // Execute with LLRT
       console.log('Testing with LLRT...')
       const llrtResult = await this.executeWithRuntime(filePath, 'llrt')
+      console.log('LLRT result:', llrtResult)
       
       // Compare results
       console.log('\n📊 Comparison Results:')
@@ -298,10 +346,6 @@ by analyzing the code statically and running it in both Node.js and LLRT environ
     console.error('❌ Error:', error.message)
     process.exit(1)
   }
-}
-
-if (require.main === module) {
-  main()
 }
 
 module.exports = { LLRTChecker }

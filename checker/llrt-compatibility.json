@@ -1,0 +1,131 @@
+{
+  "features": {
+    "assert": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "buffer": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "child_process": {
+      "supported": true,
+      "partiallySupported": true,
+      "notes": "Limited functionality"
+    },
+    "console": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "crypto": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "dns": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "events": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "fs/promises": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "fs": {
+      "supported": false,
+      "notes": "Use fs/promises instead",
+      "useFetchInstead": false
+    },
+    "http": {
+      "supported": false,
+      "notes": "Use fetch instead",
+      "useFetchInstead": true
+    },
+    "https": {
+      "supported": false,
+      "notes": "Use fetch instead",
+      "useFetchInstead": true
+    },
+    "net": {
+      "supported": true,
+      "partiallySupported": true,
+      "notes": "Limited socket functionality"
+    },
+    "os": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "path": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "perf_hooks": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "process": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "streams": {
+      "supported": true,
+      "partiallySupported": true,
+      "notes": "Not native implementation"
+    },
+    "string_decoder": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "timers": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "tty": {
+      "supported": true,
+      "notes": "Fully supported"
+    },
+    "url": {
+      "supported": true,
+      "partiallySupported": true,
+      "plannedSupport": false,
+      "notNative": false,
+      "useFetchInstead": false
+    },
+    "util": {
+      "supported": true,
+      "partiallySupported": true,
+      "plannedSupport": false,
+      "notNative": false,
+      "useFetchInstead": false
+    },
+    "tls": {
+      "supported": false,
+      "partiallySupported": false,
+      "plannedSupport": true,
+      "notNative": false,
+      "useFetchInstead": false
+    },
+    "zlib": {
+      "supported": true,
+      "partiallySupported": true,
+      "plannedSupport": false,
+      "notNative": false,
+      "useFetchInstead": false
+    },
+    "Other modules": {
+      "supported": false,
+      "partiallySupported": false,
+      "plannedSupport": false,
+      "notNative": false,
+      "useFetchInstead": false
+    }
+  },
+  "legend": {
+    "⚠️": "partially supported in LLRT",
+    "⏱": "planned partial support",
+    "*": "Not native",
+    "**": "Use fetch instead"
+  }
+}

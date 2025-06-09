@@ -1,8 +1,33 @@
 const fs = require('fs')
 const https = require('https')
 const { execSync } = require('child_process')
+const path = require('path')
+
+async function cloneLLRT() {
+  const llrtDir = path.join(__dirname, '..', 'llrt-upstream')
+  
+  if (fs.existsSync(llrtDir)) {
+    console.log('LLRT repository already exists at llrt-upstream/')
+    return
+  }
+
+  console.log('Cloning LLRT repository...')
+  try {
+    execSync('git clone https://github.com/awslabs/llrt.git llrt-upstream', {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit'
+    })
+    console.log('✅ LLRT repository cloned successfully!')
+  } catch (err) {
+    console.error('Failed to clone LLRT repository:', err.message)
+    process.exit(1)
+  }
+}
 
 async function setup() {
+  // Clone LLRT repository first
+  await cloneLLRT()
+
   // Get latest release URL
   const releaseUrl = 'https://github.com/awslabs/llrt/releases/latest/download/llrt-lambda-arm64.zip'
   console.log('Getting latest LLRT release from...', releaseUrl)

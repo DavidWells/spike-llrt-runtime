@@ -4,13 +4,12 @@
   "description": "LLRT with Serverless Framework",
   "main": "index.js",
   "bin": {
-    "llrt-check": "./bin/llrt-check.js"
+    "llrt-check": "./checker/cli.js"
   },
   "scripts": {
     "setup": "node scripts/setup.js",
-    "check": "node bin/llrt-check.js",
-    "check:hello": "node bin/llrt-check.js src/hello.js",
-    "check:goodbye": "node bin/llrt-check.js src/goodbye.js",
+    "check:hello": "node checker/cli.js src/hello.js",
+    "check:goodbye": "node checker/cli.js src/goodbye.js",
     "test": "npm run check:hello && npm run check:goodbye"
   },
   "devDependencies": {
