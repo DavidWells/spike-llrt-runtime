@@ -12,6 +12,9 @@ plugins:
 package:
   individually: true
   patterns:
+    - "!llrt-upstream/**"
+    - "!checker/**"
+    - "!archive/**"
     - "!node_modules/**"
     - "!.serverless/**"
     - "!yarn.lock"
@@ -20,7 +23,8 @@ package:
 functions:
   hello:
     handler: src/hello.handler
-    runtime: provided.al2
+    description: "Hello world  in node 22"
+    runtime: nodejs22.x
     architecture: arm64
     package:
       patterns:
@@ -30,8 +34,35 @@ functions:
       - httpApi:
           path: /hello
           method: get
-          
+
+  helloLLRT:
+    handler: src/hello.handler
+    description: "Hello world in LLRT"
+    runtime: provided.al2
+    architecture: arm64
+    package:
+      patterns:
+        - src/hello.js
+        - bootstrap
+    events:
+      - httpApi:
+          path: /hello-llrt
+          method: get
+
   goodbye:
+    handler: src/goodbye.handler
+    description: "Goodbye world in node 22"
+    runtime: nodejs22.x
+    architecture: arm64
+    package:
+      patterns:
+        - src/goodbye.js
+    events:
+      - httpApi:
+          path: /goodbye
+          method: get
+
+  goodbyeLLRT:
     handler: src/goodbye.handler
     runtime: provided.al2
     architecture: arm64
@@ -41,5 +72,30 @@ functions:
         - bootstrap
     events:
       - httpApi:
-          path: /goodbye
+          path: /goodbye-llrt
+          method: get
+
+  test:
+    handler: src/test-function.handler
+    runtime: nodejs22.x
+    architecture: arm64
+    package:
+      patterns:
+        - src/test-function.js
+    events:
+      - httpApi:
+          path: /test
+          method: get
+
+  testLLRT:
+    handler: src/test-function.handler
+    runtime: provided.al2
+    architecture: arm64
+    package:
+      patterns:
+        - src/test-function.js
+        - bootstrap
+    events:
+      - httpApi:
+          path: /test-llrt
           method: get

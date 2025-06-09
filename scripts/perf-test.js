@@ -2,15 +2,23 @@ const https = require('https');
 const { performance } = require('perf_hooks');
 
 const YOUR_ID = 'xyz' // Your api gateway id here
+const REGION = 'us-west-1'
 
 const ENDPOINTS = {
-  hello: `https://${YOUR_ID}.execute-api.us-west-1.amazonaws.com/hello`,
-  goodbye: `https://${YOUR_ID}.execute-api.us-west-1.amazonaws.com/goodbye`
+  hello: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/hello`,
+  helloLLRT: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/hello-llrt`,
+  goodbye: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/goodbye`,
+  goodbyeLLRT: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/goodbye-llrt`,
+  test: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/test`,
+  testLLRT: `https://${YOUR_ID}.execute-api.${REGION}.amazonaws.com/test-llrt`
 };
 
 const CONCURRENT_REQUESTS = 10;
-const TOTAL_REQUESTS = 100;
+const TOTAL_REQUESTS = 20;
 const WARMUP_REQUESTS = 5;
+
+// Store all results for final comparison
+const allResults = {};
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -87,6 +95,46 @@ async function runTest(endpoint, name) {
   if (errors.length > 0) {
     console.log(`Errors: ${errors.length}`);
   }
+
+  // Store results for comparison
+  allResults[name] = stats;
+}
+
+function printComparisonSummary() {
+  console.log('\n=== PERFORMANCE COMPARISON SUMMARY ===');
+  console.log('Comparing Node.js vs LLRT implementations:\n');
+
+  const comparisons = [
+    { node: 'hello', llrt: 'helloLLRT', name: 'Hello' },
+    { node: 'goodbye', llrt: 'goodbyeLLRT', name: 'Goodbye' },
+    { node: 'test', llrt: 'testLLRT', name: 'Test' }
+  ];
+
+  comparisons.forEach(({ node, llrt, name }) => {
+    const nodeStats = allResults[node];
+    const llrtStats = allResults[llrt];
+    const avgImprovement = ((nodeStats.avg - llrtStats.avg) / nodeStats.avg * 100).toFixed(1);
+    const minImprovement = ((nodeStats.min - llrtStats.min) / nodeStats.min * 100).toFixed(1);
+    const maxImprovement = ((nodeStats.max - llrtStats.max) / nodeStats.max * 100).toFixed(1);
+
+    console.log(`${name} Function:`);
+    console.log(`  Average: ${nodeStats.avg.toFixed(2)}ms (Node) vs ${llrtStats.avg.toFixed(2)}ms (LLRT) - ${avgImprovement}% faster`);
+    console.log(`  Min: ${nodeStats.min.toFixed(2)}ms (Node) vs ${llrtStats.min.toFixed(2)}ms (LLRT) - ${minImprovement}% faster`);
+    console.log(`  Max: ${nodeStats.max.toFixed(2)}ms (Node) vs ${llrtStats.max.toFixed(2)}ms (LLRT) - ${maxImprovement}% faster`);
+    console.log();
+  });
+
+  // Calculate overall averages
+  const nodeEndpoints = comparisons.map(c => c.node);
+  const llrtEndpoints = comparisons.map(c => c.llrt);
+  
+  const nodeAvg = nodeEndpoints.reduce((sum, endpoint) => sum + allResults[endpoint].avg, 0) / nodeEndpoints.length;
+  const llrtAvg = llrtEndpoints.reduce((sum, endpoint) => sum + allResults[endpoint].avg, 0) / llrtEndpoints.length;
+  const overallImprovement = ((nodeAvg - llrtAvg) / nodeAvg * 100).toFixed(1);
+
+  console.log('=== OVERALL SUMMARY ===');
+  console.log(`LLRT is on average ${overallImprovement}% faster than Node.js`);
+  console.log(`Average response times: ${nodeAvg.toFixed(2)}ms (Node) vs ${llrtAvg.toFixed(2)}ms (LLRT)`);
 }
 
 async function main() {
@@ -99,6 +147,8 @@ async function main() {
   for (const [name, endpoint] of Object.entries(ENDPOINTS)) {
     await runTest(endpoint, name);
   }
+
+  printComparisonSummary();
 }
 
 main().catch(console.error); 

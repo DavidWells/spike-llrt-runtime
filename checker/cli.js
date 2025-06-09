@@ -33,9 +33,10 @@ by analyzing the code statically and running it in both Node.js and LLRT environ
   try {
     const result = await checker.runCompatibilityTest(filePath)
     
-    console.log('\n🎯 Final Result:')
+    console.log('\n🎯 CLI Final Result:')
     if (result.compatible) {
       console.log('✅ Your code appears to be compatible with LLRT!')
+      process.exit(0)
     } else {
       console.log('❌ Your code may have compatibility issues with LLRT')
       process.exit(1)

@@ -148,73 +148,25 @@ You can perf test with `node perf-test.js`
 Average response time: 54.05ms. Not too shabby.
 
 ```bash
-───────────────────────────────
-Starting performance tests...
-Configuration:
-- Concurrent requests: 10
-- Total requests per endpoint: 100
-- Warmup requests: 5
+=== PERFORMANCE COMPARISON SUMMARY ===
+Comparing Node.js vs LLRT implementations:
 
-Running performance test for hello endpoint...
-Warming up...
-Running 100 requests with 10 concurrent requests...
-..........
+Hello Function:
+  Average: 149.96ms (Node) vs 32.37ms (LLRT) - 78.4% faster
+  Min: 127.19ms (Node) vs 22.47ms (LLRT) - 82.3% faster
+  Max: 182.75ms (Node) vs 51.00ms (LLRT) - 72.1% faster
 
-Results for hello:
-Total requests: 100
-Min response time: 34.72ms
-Max response time: 290.14ms
-Average response time: 73.94ms
-95th percentile: 210.99ms
-99th percentile: 290.14ms
+Goodbye Function:
+  Average: 133.00ms (Node) vs 30.40ms (LLRT) - 77.1% faster
+  Min: 119.05ms (Node) vs 22.92ms (LLRT) - 80.7% faster
+  Max: 148.67ms (Node) vs 48.12ms (LLRT) - 67.6% faster
 
-Running performance test for goodbye endpoint...
-Warming up...
-Running 100 requests with 10 concurrent requests...
-..........
+Test Function:
+  Average: 135.46ms (Node) vs 30.98ms (LLRT) - 77.1% faster
+  Min: 124.46ms (Node) vs 21.34ms (LLRT) - 82.9% faster
+  Max: 151.80ms (Node) vs 49.26ms (LLRT) - 67.6% faster
 
-Results for goodbye:
-Total requests: 100
-Min response time: 29.46ms
-Max response time: 156.11ms
-Average response time: 54.05ms
-95th percentile: 116.24ms
-99th percentile: 156.11ms
-```
-
-Second run. Average response time: 54.05ms
-
-```bash
-───────────────────────────────
-Starting performance tests...
-Configuration:
-- Concurrent requests: 10
-- Total requests per endpoint: 100
-- Warmup requests: 5
-
-Running performance test for hello endpoint...
-Warming up...
-Running 100 requests with 10 concurrent requests...
-..........
-
-Results for hello:
-Total requests: 100
-Min response time: 32.55ms
-Max response time: 278.29ms
-Average response time: 70.03ms
-95th percentile: 151.55ms
-99th percentile: 278.29ms
-
-Running performance test for goodbye endpoint...
-Warming up...
-Running 100 requests with 10 concurrent requests...
-..........
-
-Results for goodbye:
-Total requests: 100
-Min response time: 31.30ms
-Max response time: 278.21ms
-Average response time: 44.51ms
-95th percentile: 67.78ms
-99th percentile: 278.21ms
+=== OVERALL SUMMARY ===
+LLRT is on average 77.6% faster than Node.js
+Average response times: 139.47ms (Node) vs 31.25ms (LLRT)
 ```

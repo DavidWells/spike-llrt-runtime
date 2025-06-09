@@ -250,6 +250,7 @@ class LLRTChecker {
       console.log('Testing with Node.js...')
       const nodeResult = await this.executeWithRuntime(filePath, 'node')
       console.log('Node.js result:', nodeResult)
+      
       // Execute with LLRT
       console.log('Testing with LLRT...')
       const llrtResult = await this.executeWithRuntime(filePath, 'llrt')
@@ -273,6 +274,9 @@ class LLRTChecker {
         error: error.message || error,
         analysis
       }
+    } finally {
+      // Ensure Lambda Runtime API server is stopped
+      await this.runtimeServer.stop()
     }
   }
 
@@ -337,6 +341,7 @@ by analyzing the code statically and running it in both Node.js and LLRT environ
     console.log('\n🎯 Final Result:')
     if (result.compatible) {
       console.log('✅ Your code appears to be compatible with LLRT!')
+      process.exit(0)
     } else {
       console.log('❌ Your code may have compatibility issues with LLRT')
       process.exit(1)
