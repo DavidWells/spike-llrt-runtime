@@ -131,7 +131,7 @@ async function main() {
     }
     
     // Write the matrix to a JSON file
-    const outputPath = path.join(outputDir, 'llrt-compatibility.json')
+    const outputPath = path.join(outputDir, 'checker', 'llrt-compatibility.json')
     fs.writeFileSync(
       outputPath,
       JSON.stringify(matrix, null, 2)

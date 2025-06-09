@@ -9,6 +9,8 @@
 bootstrap
 # remote content
 sources
+archive
+llrt-upstream
 
 # testing
 /coverage

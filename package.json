@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "LLRT with Serverless Framework",
   "main": "index.js",
+  "bin": {
+    "llrt-check": "./checker/cli.js"
+  },
   "scripts": {
-    "setup": "node scripts/setup.js"
+    "setup": "node scripts/setup.js",
+    "check:hello": "node checker/cli.js src/hello.js",
+    "check:goodbye": "node checker/cli.js src/goodbye.js",
+    "test": "npm run check:hello && npm run check:goodbye"
   },
   "devDependencies": {
     "serverless": "^3.37.0"
